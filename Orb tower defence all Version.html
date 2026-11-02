@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HTMLランナー</title>
+<style>
+:root{--bg:#f6f7fb;--fg:#1c1e26;--card:#fff;--ac:#4f46e5;--bd:#e2e4ee;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14151b;--fg:#eceef5;--card:#1e2029;--ac:#818cf8;--bd:#2d3040}}
+:root[data-theme="dark"]{--bg:#14151b;--fg:#eceef5;--card:#1e2029;--ac:#818cf8;--bd:#2d3040}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,"Hiragino Sans",sans-serif}
+main{max-width:720px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:8px 0 16px}
+.card{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:10px}
+.card .t{flex:1;font-weight:600;word-break:break-all}
+button{font:inherit;border:0;border-radius:8px;padding:8px 14px;background:var(--ac);color:#fff}
+button.s{background:transparent;color:var(--fg);border:1px solid var(--bd)}
+textarea,input[type=text]{width:100%;background:var(--card);color:var(--fg);border:1px solid var(--bd);border-radius:8px;padding:8px;font:inherit}
+textarea{height:120px;font-family:monospace;font-size:13px}
+details{margin-top:18px}summary{font-weight:600;margin-bottom:8px}
+.row{display:flex;gap:8px;margin:8px 0;flex-wrap:wrap}
+#run{display:none;position:fixed;inset:0;background:var(--bg);flex-direction:column;z-index:5}
+#bar{display:flex;gap:8px;align-items:center;padding:8px 12px;padding-top:calc(8px + env(safe-area-inset-top,0px));border-bottom:1px solid var(--bd)}
+#bar b{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#fr{flex:1;width:100%;border:0;background:#fff;padding-bottom:env(safe-area-inset-bottom,0px)}
+.muted{opacity:.6;font-size:13px}
+</style>
+</head>
+<body>
+<main>
+<h1>▶ HTMLランナー</h1>
+<div id="list"></div>
+</main>
+<div id="run">
+<div id="bar"><button class="s" id="back">← 戻る</button><b id="rt"></b><button class="s" id="rl">再読込</button></div>
+<iframe id="fr" sandbox="allow-scripts allow-pointer-lock allow-forms allow-modals allow-popups" allow="fullscreen; gamepad"></iframe>
+</div>
+<script>
+// 元から入っているHTML。ここに { name, html } を足すと一覧に出ます。
+var BUILTIN=[
+{name:"サンプル: クリックカウンター",html:"<!DOCTYPE html><meta name=viewport content='width=device-width,initial-scale=1'><body style='font-family:sans-serif;text-align:center;padding-top:20vh'><h1 id=n>0</h1><button style='font-size:24px;padding:12px 24px' onclick=\"n.textContent=++c\">タップ</button><script>var c=0<\/script>"},
+{name:"サンプル: ボール",html:"<!DOCTYPE html><meta name=viewport content='width=device-width,initial-scale=1'><body style='margin:0;background:#111'><canvas id=c></canvas><script>var a=document.getElementById('c'),x=a.getContext('2d');a.width=innerWidth;a.height=innerHeight;var p=50,q=50,u=4,v=3;(function f(){x.fillStyle='#111';x.fillRect(0,0,a.width,a.height);p+=u;q+=v;if(p<20||p>a.width-20)u=-u;if(q<20||q>a.height-20)v=-v;x.fillStyle='#6cf';x.beginPath();x.arc(p,q,20,0,7);x.fill();requestAnimationFrame(f)})()<\/script>"}
+];
+var saved=[];
+var $=function(i){return document.getElementById(i)},cur="";
+function esc(s){return s.replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function openHtml(n,h){cur=h;$("rt").textContent=n;$("fr").srcdoc=h;$("run").style.display="flex"}
+function render(){
+var all=BUILTIN.map(function(o,i){return{o:o,k:"b",i:i}}).concat(saved.map(function(o,i){return{o:o,k:"s",i:i}}));
+$("list").innerHTML=all.map(function(e,j){return '<div class="card"><span class="t">'+esc(e.o.name)+'</span><button data-r="'+j+'">実行</button>'+(e.k=="s"?'<button class="s" data-d="'+e.i+'">削除</button>':'')+'</div>'}).join("")||'<p class="muted">まだありません</p>';
+$("list").onclick=function(ev){var t=ev.target,r=t.getAttribute("data-r"),d=t.getAttribute("data-d");
+if(r!==null){var e=all[+r];openHtml(e.o.name,e.o.html)}
+}}
+$("back").onclick=function(){$("run").style.display="none";$("fr").srcdoc=""};
+$("rl").onclick=function(){$("fr").srcdoc="";setTimeout(function(){$("fr").srcdoc=cur},30)};
+render();
+</script>
+</body>
+</html>
